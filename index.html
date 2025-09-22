@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador Financiero Personal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-title">💰 Organizador Financiero</h1>
+                <ul class="nav-menu">
+                    <li><a href="#inicio" class="nav-link active">Inicio</a></li>
+                    <li><a href="#presupuesto" class="nav-link">Presupuesto</a></li>
+                    <li><a href="#deudas" class="nav-link">Deudas</a></li>
+                    <li><a href="#recursos" class="nav-link">Recursos</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Notificación de Persistencia de Datos -->
+        <div id="data-persistence-notice" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 1rem; text-align: center; margin: 0; display: none;">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <span style="font-size: 1.2rem;">💾</span>
+                <strong>¡Datos Seguros!</strong> Tu información se guarda automáticamente y se mantiene entre sesiones.
+                <button id="dismiss-notice" style="background: none; border: 1px solid white; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; margin-left: 1rem; cursor: pointer; font-size: 0.9rem;">✕</button>
+            </div>
+        </div>
+
+        <!-- Sección Inicio y Diagnóstico -->
+        <section id="inicio" class="section active">
+            <div class="container">
+                <h2>Diagnóstico Financiero</h2>
+                <p class="section-description">Comencemos analizando tu situación financiera actual para crear un plan personalizado.</p>
+                
+                <!-- Indicador de Estado de Datos -->
+                <div id="data-status" class="card" style="background: #f0f9ff; border-left: 4px solid #2563eb; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 1.5rem;">💾</span>
+                        <div>
+                            <h4 style="margin: 0; color: #2563eb;">Estado de tus Datos</h4>
+                            <p id="data-status-text" style="margin: 0.5rem 0 0 0; color: #6b7280;">Cargando estado...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paso 1: Formulario de Ingresos y Gastos -->
+                <div class="card">
+                    <h3>Paso 1: Ingresos y Gastos Mensuales</h3>
+                    <form id="financial-form">
+                        <div class="form-group">
+                            <label for="income">Ingresos Netos Mensuales ($)</label>
+                            <input type="number" id="income" name="income" step="0.01" required>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Gastos Fijos</h4>
+                            <div id="fixed-expenses">
+                                <div class="expense-item">
+                                    <input type="text" class="expense-category" list="fixed-categories" placeholder="Categoría">
+                                    <input type="number" class="expense-amount" step="0.01" placeholder="Monto ($)">
+                                    <button type="button" class="remove-expense">×</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-fixed-expense" class="add-btn">+ Agregar Gasto Fijo</button>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Gastos Variables</h4>
+                            <div id="variable-expenses">
+                                <div class="expense-item">
+                                    <input type="text" class="expense-category" list="variable-categories" placeholder="Categoría">
+                                    <input type="number" class="expense-amount" step="0.01" placeholder="Monto ($)">
+                                    <button type="button" class="remove-expense">×</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-variable-expense" class="add-btn">+ Agregar Gasto Variable</button>
+                        </div>
+
+                        <button type="submit" class="primary-btn">Analizar Finanzas</button>
+                    </form>
+
+                    <!-- Listas de autocompletado -->
+                    <datalist id="fixed-categories">
+                        <option value="Alquiler/Hipoteca">
+                        <option value="Servicios públicos">
+                        <option value="Seguros">
+                        <option value="Préstamos">
+                        <option value="Suscripciones">
+                        <option value="Internet/Teléfono">
+                    </datalist>
+
+                    <datalist id="variable-categories">
+                        <option value="Alimentación">
+                        <option value="Transporte">
+                        <option value="Entretenimiento">
+                        <option value="Ropa">
+                        <option value="Salud">
+                        <option value="Educación">
+                        <option value="Gastos varios">
+                    </datalist>
+                </div>
+
+                <!-- Paso 2: Análisis y Resumen -->
+                <div id="analysis-section" class="card" style="display: none;">
+                    <h3>Paso 2: Análisis de tu Situación Financiera</h3>
+                    <div class="analysis-grid">
+                        <div class="chart-container">
+                            <canvas id="expense-chart"></canvas>
+                        </div>
+                        <div class="analysis-summary">
+                            <h4>Resumen Financiero</h4>
+                            <div class="summary-item">
+                                <span class="label">Ingresos Mensuales:</span>
+                                <span id="summary-income" class="value">$0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Gastos Totales:</span>
+                                <span id="summary-expenses" class="value">$0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Excedente/Déficit:</span>
+                                <span id="summary-balance" class="value">$0</span>
+                            </div>
+                            
+                            <h4>Distribución vs Regla 50/30/20</h4>
+                            <div class="rule-comparison">
+                                <div class="rule-item">
+                                    <span class="rule-label">Gastos Fijos (Recomendado: 50%)</span>
+                                    <div class="progress-bar">
+                                        <div id="fixed-progress" class="progress-fill"></div>
+                                    </div>
+                                    <span id="fixed-percentage" class="percentage">0%</span>
+                                </div>
+                                <div class="rule-item">
+                                    <span class="rule-label">Gastos Variables (Recomendado: 30%)</span>
+                                    <div class="progress-bar">
+                                        <div id="variable-progress" class="progress-fill"></div>
+                                    </div>
+                                    <span id="variable-percentage" class="percentage">0%</span>
+                                </div>
+                                <div class="rule-item">
+                                    <span class="rule-label">Ahorro (Recomendado: 20%)</span>
+                                    <div class="progress-bar">
+                                        <div id="savings-progress" class="progress-fill"></div>
+                                    </div>
+                                    <span id="savings-percentage" class="percentage">0%</span>
+                                </div>
+                            </div>
+                            
+                            <div id="recommendations" class="recommendations">
+                                <h4>Recomendaciones</h4>
+                                <ul id="recommendation-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Presupuesto y Metas -->
+        <section id="presupuesto" class="section">
+            <div class="container">
+                <h2>Presupuesto y Metas Financieras</h2>
+                
+                <!-- Paso 3: Creación de Presupuesto -->
+                <div class="card">
+                    <h3>Paso 3: Tu Presupuesto Personalizado</h3>
+                    <div id="budget-creator">
+                        <p>Basado en tu análisis, aquí tienes tu presupuesto recomendado:</p>
+                        <div class="budget-controls">
+                            <div class="budget-slider">
+                                <label>Gastos Fijos: <span id="fixed-budget-percent">50</span>%</label>
+                                <input type="range" id="fixed-slider" min="30" max="70" value="50">
+                                <span id="fixed-budget-amount">$0</span>
+                            </div>
+                            <div class="budget-slider">
+                                <label>Gastos Variables: <span id="variable-budget-percent">30</span>%</label>
+                                <input type="range" id="variable-slider" min="10" max="50" value="30">
+                                <span id="variable-budget-amount">$0</span>
+                            </div>
+                            <div class="budget-slider">
+                                <label>Ahorro: <span id="savings-budget-percent">20</span>%</label>
+                                <input type="range" id="savings-slider" min="10" max="40" value="20">
+                                <span id="savings-budget-amount">$0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="budget-tracking">
+                            <h4>Seguimiento de Gastos del Mes</h4>
+                            <div class="tracking-category">
+                                <span>Gastos Fijos</span>
+                                <div class="progress-bar">
+                                    <div id="fixed-spent-progress" class="progress-fill"></div>
+                                </div>
+                                <span id="fixed-spent-text">$0 / $0</span>
+                            </div>
+                            <div class="tracking-category">
+                                <span>Gastos Variables</span>
+                                <div class="progress-bar">
+                                    <div id="variable-spent-progress" class="progress-fill"></div>
+                                </div>
+                                <span id="variable-spent-text">$0 / $0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 4: Fondo de Emergencia -->
+                <div class="card">
+                    <h3>Paso 4: Fondo de Emergencia</h3>
+                    <div class="emergency-fund">
+                        <div class="fund-calculator">
+                            <div class="form-group">
+                                <label>Gastos fijos mensuales: $<span id="monthly-fixed-display">0</span></label>
+                            </div>
+                            <div class="form-group">
+                                <label for="emergency-months">Meses de cobertura:</label>
+                                <select id="emergency-months">
+                                    <option value="3">3 meses (Mínimo recomendado)</option>
+                                    <option value="6" selected>6 meses (Recomendado)</option>
+                                    <option value="12">12 meses (Conservador)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="current-emergency">Cantidad actual en fondo de emergencia:</label>
+                                <input type="number" id="current-emergency" step="0.01" placeholder="$0">
+                            </div>
+                        </div>
+                        
+                        <div class="fund-progress">
+                            <div class="fund-goal">
+                                <span>Meta: $<span id="emergency-goal">0</span></span>
+                            </div>
+                            <div class="progress-bar emergency">
+                                <div id="emergency-progress" class="progress-fill"></div>
+                            </div>
+                            <div class="fund-status">
+                                <span>Progreso: $<span id="emergency-current">0</span> / $<span id="emergency-target">0</span></span>
+                                <span id="emergency-percentage-display">0%</span>
+                            </div>
+                            <div class="fund-recommendation">
+                                <p id="emergency-advice">Necesitas ahorrar $<span id="emergency-needed">0</span> más para alcanzar tu meta.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 5: Metas Financieras -->
+                <div class="card">
+                    <h3>Paso 5: Metas Financieras</h3>
+                    <div class="goals-section">
+                        <form id="goal-form">
+                            <div class="form-group">
+                                <label for="goal-name">Nombre de la meta:</label>
+                                <input type="text" id="goal-name" placeholder="Ej: Vacaciones, Auto nuevo, Casa">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="goal-amount">Monto objetivo ($):</label>
+                                <input type="number" id="goal-amount" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="goal-deadline">Fecha límite:</label>
+                                <input type="date" id="goal-deadline">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="goal-type">Tipo de meta:</label>
+                                <select id="goal-type">
+                                    <option value="short">Corto plazo (menos de 1 año)</option>
+                                    <option value="medium">Mediano plazo (1-5 años)</option>
+                                    <option value="long">Largo plazo (más de 5 años)</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="primary-btn">Agregar Meta</button>
+                        </form>
+                        
+                        <div id="goals-list" class="goals-container">
+                            <h4>Tus Metas Financieras</h4>
+                            <div id="goals-display">
+                                <p class="empty-state">No tienes metas financieras aún. ¡Agrega tu primera meta arriba!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Reducción de Deudas -->
+        <section id="deudas" class="section">
+            <div class="container">
+                <h2>Gestión de Deudas y Herramientas</h2>
+                
+                <!-- Paso 6: Gestión de Deudas -->
+                <div class="card">
+                    <h3>Paso 6: Gestión de Deudas</h3>
+                    <div class="debt-management">
+                        <form id="debt-form">
+                            <h4>Agregar Deuda</h4>
+                            <div class="debt-form-grid">
+                                <div class="form-group">
+                                    <label for="debt-name">Nombre de la deuda:</label>
+                                    <input type="text" id="debt-name" placeholder="Ej: Tarjeta de crédito, Préstamo auto">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="debt-balance">Saldo actual ($):</label>
+                                    <input type="number" id="debt-balance" step="0.01">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="debt-rate">Tasa de interés anual (%):</label>
+                                    <input type="number" id="debt-rate" step="0.01">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="debt-minimum">Pago mínimo mensual ($):</label>
+                                    <input type="number" id="debt-minimum" step="0.01">
+                                </div>
+                            </div>
+                            <button type="submit" class="primary-btn">Agregar Deuda</button>
+                        </form>
+                        
+                        <div id="debt-strategy" style="display: none;">
+                            <h4>Estrategias de Pago</h4>
+                            <div class="strategy-selector">
+                                <button id="snowball-btn" class="strategy-btn active">Bola de Nieve</button>
+                                <button id="avalanche-btn" class="strategy-btn">Avalancha</button>
+                            </div>
+                            
+                            <div class="strategy-explanation">
+                                <div id="snowball-explanation" class="strategy-info">
+                                    <h5>🏔️ Método Bola de Nieve</h5>
+                                    <p>Paga primero las deudas más pequeñas. Proporciona motivación psicológica al eliminar deudas rápidamente.</p>
+                                </div>
+                                <div id="avalanche-explanation" class="strategy-info" style="display: none;">
+                                    <h5>🏔️ Método Avalancha</h5>
+                                    <p>Paga primero las deudas con mayor tasa de interés. Matemáticamente más eficiente, ahorras más dinero en intereses.</p>
+                                </div>
+                            </div>
+                            
+                            <div id="debt-list" class="debt-container">
+                                <h4>Plan de Pago Recomendado</h4>
+                                <div id="debts-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 7: Calculadora de Intereses -->
+                <div class="card">
+                    <h3>Paso 7: Calculadora de Intereses</h3>
+                    <div class="interest-calculator">
+                        <div class="calculator-inputs">
+                            <div class="form-group">
+                                <label for="principal">Monto inicial ($):</label>
+                                <input type="number" id="principal" step="0.01" value="1000">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="interest-rate">Tasa de interés anual (%):</label>
+                                <input type="number" id="interest-rate" step="0.01" value="18">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="payment">Pago mensual ($):</label>
+                                <input type="number" id="payment" step="0.01" value="50">
+                            </div>
+                            
+                            <button id="calculate-interest" class="primary-btn">Calcular</button>
+                        </div>
+                        
+                        <div id="interest-results" class="calculator-results">
+                            <div class="result-summary">
+                                <div class="result-item">
+                                    <span class="label">Tiempo para pagar:</span>
+                                    <span id="payoff-time" class="value">--</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="label">Total de intereses:</span>
+                                    <span id="total-interest" class="value">$--</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="label">Total pagado:</span>
+                                    <span id="total-paid" class="value">$--</span>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="payment-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Recursos Educativos -->
+        <section id="recursos" class="section">
+            <div class="container">
+                <h2>Recursos Educativos</h2>
+                
+                <div class="resources-grid">
+                    <article class="resource-card">
+                        <h3>🏦 Cómo funcionan las inversiones</h3>
+                        <p>Aprende los conceptos básicos de inversión, tipos de instrumentos financieros y cómo empezar a invertir.</p>
+                        <div class="resource-content">
+                            <h4>Tipos de Inversiones:</h4>
+                            <ul>
+                                <li><strong>Cuentas de ahorro:</strong> Baja rentabilidad pero alta seguridad</li>
+                                <li><strong>Certificados de depósito:</strong> Rentabilidad fija a plazo determinado</li>
+                                <li><strong>Acciones:</strong> Participación en empresas, mayor riesgo y potencial</li>
+                                <li><strong>Bonos:</strong> Préstamos a gobiernos o empresas</li>
+                                <li><strong>Fondos de inversión:</strong> Diversificación automática</li>
+                            </ul>
+                            
+                            <h4>Principios Básicos:</h4>
+                            <ul>
+                                <li>Diversificación: No pongas todos los huevos en una canasta</li>
+                                <li>Horizonte temporal: Inversiones a largo plazo suelen ser menos riesgosas</li>
+                                <li>Tolerancia al riesgo: Invierte según tu comodidad con las fluctuaciones</li>
+                                <li>Costo-promedio: Invierte cantidades regulares para reducir volatilidad</li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article class="resource-card">
+                        <h3>💰 Diferencia entre ahorro e inversión</h3>
+                        <p>Entiende cuándo ahorrar y cuándo invertir para maximizar tu crecimiento financiero.</p>
+                        <div class="resource-content">
+                            <h4>Ahorro:</h4>
+                            <ul>
+                                <li>Para gastos de emergencia (3-6 meses de gastos)</li>
+                                <li>Metas a corto plazo (menos de 2 años)</li>
+                                <li>Dinero que necesitas acceso inmediato</li>
+                                <li>Cuentas de ahorro, CDs de corto plazo</li>
+                            </ul>
+                            
+                            <h4>Inversión:</h4>
+                            <ul>
+                                <li>Metas a largo plazo (más de 5 años)</li>
+                                <li>Jubilación</li>
+                                <li>Hacer crecer tu patrimonio</li>
+                                <li>Acciones, bonos, fondos de inversión</li>
+                            </ul>
+                            
+                            <h4>Regla General:</h4>
+                            <p>Primero asegura tu fondo de emergencia en ahorros, luego invierte el excedente para objetivos a largo plazo.</p>
+                        </div>
+                    </article>
+
+                    <article class="resource-card">
+                        <h3>💳 Consejos para negociar deudas</h3>
+                        <p>Estrategias efectivas para reducir tus deudas y mejorar tus condiciones de pago.</p>
+                        <div class="resource-content">
+                            <h4>Antes de negociar:</h4>
+                            <ul>
+                                <li>Conoce tu situación financiera completa</li>
+                                <li>Revisa tu historial de pagos</li>
+                                <li>Calcula cuánto puedes pagar realmente</li>
+                                <li>Prepara documentación de dificultades financieras</li>
+                            </ul>
+                            
+                            <h4>Estrategias de negociación:</h4>
+                            <ul>
+                                <li>Llama durante horarios de menor volumen</li>
+                                <li>Pide hablar con el departamento de retención</li>
+                                <li>Propón un plan de pago específico</li>
+                                <li>Negocia reducción de intereses o principal</li>
+                                <li>Obtén cualquier acuerdo por escrito</li>
+                            </ul>
+                            
+                            <h4>Opciones que puedes solicitar:</h4>
+                            <ul>
+                                <li>Plan de pago extendido</li>
+                                <li>Reducción de tasa de interés</li>
+                                <li>Condonación parcial de deuda</li>
+                                <li>Pago único con descuento</li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article class="resource-card">
+                        <h3>📊 Guías para mejorar tu puntaje crediticio</h3>
+                        <p>Pasos concretos para construir y mantener un excelente historial crediticio.</p>
+                        <div class="resource-content">
+                            <h4>Factores que afectan tu puntaje:</h4>
+                            <ul>
+                                <li><strong>Historial de pagos (35%):</strong> Paga siempre a tiempo</li>
+                                <li><strong>Utilización de crédito (30%):</strong> Mantén saldos bajos</li>
+                                <li><strong>Historial crediticio (15%):</strong> Mantén cuentas antiguas abiertas</li>
+                                <li><strong>Tipos de crédito (10%):</strong> Diversifica responsablemente</li>
+                                <li><strong>Consultas recientes (10%):</strong> Evita muchas solicitudes</li>
+                            </ul>
+                            
+                            <h4>Estrategias para mejorar:</h4>
+                            <ul>
+                                <li>Configura pagos automáticos para nunca atrasarte</li>
+                                <li>Mantén utilización por debajo del 30% (idealmente 10%)</li>
+                                <li>Paga saldos antes de la fecha de corte</li>
+                                <li>No cierres tarjetas antigas</li>
+                                <li>Monitorea tu reporte crediticio regularmente</li>
+                                <li>Disputa errores inmediatamente</li>
+                            </ul>
+                            
+                            <h4>Mitos comunes:</h4>
+                            <ul>
+                                <li>❌ Cerrar tarjetas mejora tu puntaje</li>
+                                <li>❌ Necesitas llevar saldo para construir crédito</li>
+                                <li>❌ Revisar tu crédito lo daña</li>
+                                <li>✅ Los pagos puntuales son lo más importante</li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Organizador Financiero Personal. Desarrollado para tu éxito financiero.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
